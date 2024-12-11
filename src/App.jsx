@@ -6,7 +6,7 @@ function App() {
   return (
     <div>
       <Navbar />
-      <div className="min-h-[calc(100vh-240px)]">
+      <div className="min-h-[calc(100vh-216px)] md:min-h-[calc(100vh-144px)]">
         <AppRoutes />
       </div>
       <Footer />
