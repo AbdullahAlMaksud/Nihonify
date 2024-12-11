@@ -102,14 +102,18 @@ const Navbar = () => {
                   <DropdownMenuContent>
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <LogIn />
-                      Login
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <DoorOpen />
-                      Register
-                    </DropdownMenuItem>
+                    <Link to={"/login"}>
+                      <DropdownMenuItem>
+                        <LogIn />
+                        Login
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link to={"/register"}>
+                      <DropdownMenuItem>
+                        <DoorOpen />
+                        Register
+                      </DropdownMenuItem>
+                    </Link>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {/* Mobile+Tablet Menu */}
