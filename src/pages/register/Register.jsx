@@ -25,12 +25,14 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("email", email);
     formData.append("password", password);
     if (photo) formData.append("photo", photo);
 
+    // Log form data to console
     console.log("Form data:");
     for (const [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
