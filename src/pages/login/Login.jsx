@@ -1,5 +1,6 @@
 import Logo from "@/components/shared/logo/Logo";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Link } from "react-router";
 
@@ -7,6 +8,7 @@ const Login = () => {
   const [passwordSee, setPasswordSee] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { toast } = useToast();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,12 +29,22 @@ const Login = () => {
         <div className="flex justify-center mx-auto">
           <Logo />
         </div>
-        <p className="mt-3 text-xl text-center text-gray-600 dark:text-gray-200">
+        <p
+          onClick={() =>
+            toast({
+              title: "Success",
+              description: "Registration successful",
+            })
+          }
+          className="mt-3 text-xl text-center text-gray-600 dark:text-gray-200"
+        >
           Welcome back!
         </p>
+
+        {/* Google login button and Divider Start*/}
         <a
           href="#"
-          className="flex items-center justify-center mt-4 text-gray-600 transition-colors duration-300 transform border rounded-lg dark:border-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+          className="hidden items-center justify-center mt-4 text-gray-600 transition-colors duration-300 transform border rounded-lg dark:border-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
         >
           <div className="px-4 py-2">
             <svg className="w-6 h-6" viewBox="0 0 40 40">
@@ -58,7 +70,7 @@ const Login = () => {
             Sign in with Google
           </span>
         </a>
-        <div className="flex items-center justify-between mt-4">
+        <div className="hidden items-center justify-between mt-4">
           <span className="w-1/5 border-b dark:border-gray-600 lg:w-1/4" />
           <a
             href="#"
@@ -68,6 +80,8 @@ const Login = () => {
           </a>
           <span className="w-1/5 border-b dark:border-gray-400 lg:w-1/4" />
         </div>
+        {/* Google login button and Divider End*/}
+
         <form onSubmit={handleSubmit}>
           <div className="mt-4">
             <label
@@ -99,7 +113,10 @@ const Login = () => {
               required
             />
             <div className="text-xs flex items-center gap-2 mt-2">
-              <Checkbox onClick={() => setPasswordSee(!passwordSee)} />
+              <Checkbox
+                checked={passwordSee}
+                onCheckedChange={(checked) => setPasswordSee(checked)}
+              />
               See Password
             </div>
           </div>

@@ -1,43 +1,93 @@
 import Logo from "@/components/shared/logo/Logo";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { useForm } from "react-hook-form";
 import { Link } from "react-router";
-// import { Link } from "react-router-dom";
 
 const Register = () => {
-  const [passwordSee, setPasswordSee] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [seePassword, setSeePassword] = useState(false);
+  const { toast } = useToast();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm();
 
   const onDrop = (acceptedFiles) => {
     if (acceptedFiles.length) {
       setPhoto(acceptedFiles[0]);
+      setPhotoPreview(URL.createObjectURL(acceptedFiles[0]));
+      setValue("photo", acceptedFiles[0]);
     }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: "image/*",
+    accept: {
+      "image/*": [".png", ".jpg", ".jpeg", ".gif"],
+    },
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
+    setUploading(true);
+    try {
+      let photoUrl = null;
+      if (photo) {
+        const formData = new FormData();
+        formData.append("image", photo);
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("password", password);
-    if (photo) formData.append("photo", photo);
+        const imgbbResponse = await axios.post(
+          `https://api.imgbb.com/1/upload?key=${
+            import.meta.env.VITE_IMGBB_API_KEY
+          }`,
+          formData
+        );
+        photoUrl = imgbbResponse.data.data.url;
+      }
 
-    // Log form data to console
-    console.log("Form data:");
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
+      const payload = {
+        username: data.name,
+        email: data.email,
+        password: data.password,
+        photo: photoUrl,
+        role: "user",
+      };
+
+      console.log("Registering with:", payload);
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_SERVER}/api/auth/register`,
+        payload
+      );
+      console.log("Registration successful:", response.data);
+      if (response.data.success) {
+        toast({
+          title: "Registration Success ✅",
+          description: `${response.data.message}`,
+        });
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1500);
+      } else {
+        console.error("Registration failed:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
+    } finally {
+      setUploading(false);
     }
   };
+
+  const password = watch("password");
 
   return (
     <div className="flex w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-lg dark:bg-gray-800 lg:max-w-4xl">
@@ -55,23 +105,23 @@ const Register = () => {
         <p className="mt-3 text-xl text-center text-gray-600 dark:text-gray-200">
           Create a New Account!
         </p>
-
-        <hr className="mt-6 border-b-1 border-gray-300 dark:border-gray-700" />
-
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Name Field */}
           <div className="mt-4">
             <label className="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-200">
               Name
             </label>
             <input
+              {...register("name", { required: "Name is required" })}
               className="block w-full px-4 py-2 text-gray-700 bg-white border rounded-lg dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring focus:ring-blue-300"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs">{errors.name.message}</p>
+            )}
           </div>
 
+          {/* Photo Upload */}
           <div className="mt-4">
             <label className="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-200">
               Photo
@@ -84,9 +134,9 @@ const Register = () => {
                   : "border-gray-300 bg-gray-50"
               }`}
             >
-              {photo && (
+              {photoPreview && (
                 <img
-                  src={URL.createObjectURL(photo)}
+                  src={photoPreview}
                   alt="Uploaded preview"
                   className="w-12 h-12 object-cover rounded-full"
                 />
@@ -104,42 +154,83 @@ const Register = () => {
             </div>
           </div>
 
+          {/* Email Field */}
           <div className="mt-4">
             <label className="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-200">
               Email Address
             </label>
             <input
+              {...register("email", { required: "Email is required" })}
               className="block w-full px-4 py-2 text-gray-700 bg-white border rounded-lg dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring focus:ring-blue-300"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs">{errors.email.message}</p>
+            )}
           </div>
 
+          {/* Password Field */}
           <div className="mt-4">
             <label className="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-200">
               Password
             </label>
             <input
+              {...register("password", {
+                required: "Password is required",
+                pattern: {
+                  value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
+                  message:
+                    "Password must be at least 6 characters and contain letters and numbers",
+                },
+              })}
               className="block w-full px-4 py-2 text-gray-700 bg-white border rounded-lg dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring focus:ring-blue-300"
-              type={passwordSee ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              type={seePassword ? "text" : "password"}
             />
-            <div className="text-xs flex items-center gap-2 mt-2">
-              <Checkbox onClick={() => setPasswordSee(!passwordSee)} />
-              See Password
-            </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs">{errors.password.message}</p>
+            )}
+          </div>
+
+          {/* Confirm Password Field */}
+          <div className="mt-4">
+            <label className="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-200">
+              Confirm Password
+            </label>
+            <input
+              {...register("confirmPassword", {
+                required: "Confirm password is required",
+                validate: (value) =>
+                  value === password || "Passwords do not match",
+              })}
+              className="block w-full px-4 py-2 text-gray-700 bg-white border rounded-lg dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring focus:ring-blue-300"
+              type={seePassword ? "text" : "password"}
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          {/* Show Password Checkbox */}
+          <div className="flex items-center mt-2">
+            <Checkbox
+              className="mr-2"
+              checked={seePassword}
+              onCheckedChange={(checked) => setSeePassword(checked)}
+            />
+            <label htmlFor="showPassword" className="text-xs text-gray-600">
+              Show Password
+            </label>
           </div>
 
           <div className="mt-6">
             <button
               type="submit"
+              disabled={uploading}
               className="w-full px-6 py-3 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-gray-800 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-50"
             >
-              Register
+              {uploading ? "Uploading..." : "Register"}
             </button>
           </div>
         </form>
