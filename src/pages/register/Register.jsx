@@ -5,9 +5,10 @@ import axios from "axios";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -75,7 +76,7 @@ const Register = () => {
           description: `${response.data.message}`,
         });
         setTimeout(() => {
-          window.location.href = "/login";
+          navigate("/login");
         }, 1500);
       } else {
         console.error("Registration failed:", response.data.message);
