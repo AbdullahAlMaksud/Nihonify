@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Diameter,
   DoorOpen,
@@ -28,7 +30,8 @@ import { Link } from "react-router";
 import UserNavMenu from "./menu/UserNavMenu";
 
 const Navbar = () => {
-  const user = false;
+  const { user, logout } = useAuth();
+  console.log(user);
   return (
     <>
       <nav className="relative bg-white shadow-sm min-h-16 flex items-center">
@@ -60,8 +63,8 @@ const Navbar = () => {
                     <Avatar>
                       <AvatarImage
                         className=""
-                        src="https://github.com/shadcn.png"
-                        alt="@shadcn"
+                        src={user?.photo}
+                        alt={user?.username}
                       />
                       <AvatarFallback>CN</AvatarFallback>
                     </Avatar>
@@ -69,17 +72,21 @@ const Navbar = () => {
                   <DropdownMenuContent>
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <User2Icon />
-                      Profile
-                    </DropdownMenuItem>
+                    <Link to={"dashboard"} className="flex items-center gap-2">
+                      <DropdownMenuItem>
+                        <User2Icon className="size-4" />
+                        Profile
+                      </DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem>
                       <Settings2 />
                       Settings
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <LogOutIcon />
-                      Logout
+                      <Button onClick={() => logout()}>
+                        <LogOutIcon />
+                        Logout
+                      </Button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -90,7 +97,7 @@ const Navbar = () => {
                   <DropdownMenuTrigger className="outline-none flex items-center justify-center border rounded-sm hover:border-primary">
                     <Avatar className="flex items-center justify-center">
                       <AvatarImage
-                        src="./user-round.svg"
+                        src={"./user-round.svg"}
                         className="size-6 object-contain"
                         alt="@shadcn"
                       />

@@ -1,19 +1,22 @@
 import Logo from "@/components/shared/logo/Logo";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
+import authService from "@/services/authService";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [seePassword, setSeePassword] = useState(false);
-  const { toast } = useToast();
 
   const {
     register,
@@ -39,50 +42,50 @@ const Register = () => {
   });
 
   const onSubmit = async (data) => {
-    setUploading(true);
     try {
+      setUploading(true);
       let photoUrl = null;
+
       if (photo) {
         const formData = new FormData();
         formData.append("image", photo);
 
-        const imgbbResponse = await axios.post(
+        const response = await fetch(
           `https://api.imgbb.com/1/upload?key=${
             import.meta.env.VITE_IMGBB_API
           }`,
-          formData
+          {
+            method: "POST",
+            body: formData,
+          }
         );
-        photoUrl = imgbbResponse.data.data.url;
+
+        const result = await response.json();
+        photoUrl = result.data.url;
       }
 
-      const payload = {
+      const response = await authService.register({
         username: data.name,
         email: data.email,
+        photo: photoUrl, // Now sending the string URL
         password: data.password,
-        photo: photoUrl,
         role: "user",
-      };
+      });
 
-      console.log("Registering with:", payload);
+      authService.setAuthToken(response.token);
+      login(response.token, response.user);
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_SERVER}/api/auth/register`,
-        payload
-      );
-      console.log("Registration successful:", response.data);
-      if (response.data.success) {
-        toast({
-          title: "Registration Success ✅",
-          description: `${response.data.message}`,
-        });
-        setTimeout(() => {
-          navigate("/login");
-        }, 1500);
-      } else {
-        console.error("Registration failed:", response.data.message);
-      }
+      toast({
+        title: "Success",
+        description: "Registration successful!",
+      });
+
+      navigate("/dashboard");
     } catch (error) {
-      console.error("Error during registration:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Registration failed",
+      });
     } finally {
       setUploading(false);
     }

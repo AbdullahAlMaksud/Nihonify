@@ -1,16 +1,29 @@
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "./firebaseConfig";
+import axios from 'axios';
 
-const provider = new GoogleAuthProvider();
+const API_URL = "http://localhost:7001/api/auth";
 
-export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    console.log("User Info:", user);
-    return user;
-  } catch (error) {
-    console.error("Error during sign-in:", error.message);
-    throw error;
+
+const authService = {
+  login: async (email, password) => {
+    const response = await axios.post(`${API_URL}/login`, {
+      email,
+      password,
+    });
+    return response.data;
+  },
+
+  register: async (userData) => {
+    const response = await axios.post(`${API_URL}/register`, userData);
+    return response.data;
+  },
+
+  setAuthToken: (token) => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+    }
   }
 };
+
+export default authService;
